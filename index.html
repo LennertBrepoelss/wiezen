@@ -1,0 +1,366 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wiezen</title>
+<meta name="theme-color" content="#0f1318">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0f1318; --panel:#171d24; --panel2:#1e262f; --line:#2a333e;
+  --ink:#eef1f4; --muted:#8d99a6; --accent:#e5484d; --accent-soft:#2a1517;
+  --win:#3dd68c; --lose:#ff6b6b; --win-soft:#123526; --lose-soft:#3a1719; --gold:#f5b942;
+  --font:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 var(--font);padding-top:env(safe-area-inset-top,0px);overscroll-behavior-y:contain}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation}
+button:disabled{cursor:default}
+button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.wrap{max-width:520px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
+header.top{display:flex;align-items:center;justify-content:space-between;padding:16px 0 12px}
+.brand{font-weight:800;font-size:21px;letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.brand i{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;background:var(--accent);color:#fff;font-style:normal;font-size:17px}
+.ghost{background:none;border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:14px;color:var(--muted)}
+h2{font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:22px 0 10px}
+
+/* setup */
+.setup h1{font-weight:800;font-size:32px;line-height:1.05;margin:26px 0 8px;text-transform:uppercase;letter-spacing:.01em}
+.setup p{color:var(--muted);margin:0 0 22px}
+.field{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 6px 6px 16px;margin-bottom:10px}
+.field span{font-weight:800;color:var(--muted);width:18px}
+.field input{flex:1;min-width:0;background:none;border:0;color:var(--ink);font:600 18px var(--font);padding:12px 4px}
+.field input::placeholder{color:#55606c}
+.field input:focus{outline:none}
+.field:focus-within{border-color:var(--accent)}
+.primary{display:block;width:100%;background:var(--accent);color:#fff;border:0;border-radius:14px;padding:17px;font-weight:800;font-size:16px;letter-spacing:.08em;text-transform:uppercase}
+.primary:disabled{background:var(--panel2);color:#56616d}
+
+/* scores */
+.board{display:grid;gap:8px}
+.prow{display:grid;grid-template-columns:30px 1fr auto;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.rank{font-weight:800;color:var(--muted)}
+.prow.lead .rank{color:var(--gold)}
+.pname{font-weight:600;font-size:18px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pname small{display:inline-block;margin-left:8px;font-weight:700;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--bg);background:var(--muted);padding:3px 6px;border-radius:4px;vertical-align:2px}
+.ptot{font-weight:800;font-size:30px;line-height:1}
+.pos{color:var(--win)} .neg{color:var(--lose)}
+.row2{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;color:var(--muted);font-size:14px}
+.link{background:none;border:0;color:var(--ink);font-weight:600;text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+.cta{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:16px}
+.passbtn{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:0 16px;font-weight:700;font-size:14px}
+.passbtn[aria-pressed="true"]{border-color:var(--gold);color:var(--gold)}
+.banner{margin-top:12px;background:#33280f;border:1px solid #6b5420;color:var(--gold);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600}
+.last{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 16px;font-size:14px;color:var(--muted)}
+.last b{color:var(--ink)}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgba(15,19,24,.97);border-top:1px solid var(--line);padding:8px max(16px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+nav.tabs .in{max-width:520px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+nav.tabs button{background:none;border:0;border-radius:10px;padding:11px 4px;font-weight:700;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+nav.tabs button[aria-current="page"]{background:var(--panel2);color:var(--ink)}
+
+/* rondes */
+.empty{color:var(--muted);text-align:center;padding:40px 10px;border:1px dashed var(--line);border-radius:14px}
+.rlist{display:grid;gap:8px}
+.ritem{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.rhead{width:100%;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;text-align:left;background:none;border:0;padding:14px 16px}
+.rno{font-weight:800;color:var(--muted);font-size:14px}
+.rbid{font-weight:600}
+.rsub{font-size:13px;color:var(--muted)}
+.tag{font-weight:700;font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:5px 8px;border-radius:6px;white-space:nowrap}
+.tag.ok{background:var(--win-soft);color:var(--win)} .tag.ko{background:var(--lose-soft);color:var(--lose)} .tag.mix{background:#33280f;color:var(--gold)}
+.rbody{padding:0 16px 14px;border-top:1px solid var(--line)}
+.dgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:12px}
+.dcell{background:var(--panel2);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px;font-size:15px}
+.dcell span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.del{margin-top:12px;width:100%;background:none;border:1px solid var(--line);border-radius:10px;padding:11px;color:var(--lose);font-weight:600;font-size:14px}
+.del.sure{background:var(--lose);color:var(--bg);border-color:var(--lose)}
+
+/* puntentabel */
+.ptable{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.pr{border-bottom:1px solid var(--line)}
+.pr:last-child{border-bottom:0}
+.ph{width:100%;display:grid;grid-template-columns:1fr auto 18px;gap:10px;align-items:center;background:none;border:0;padding:14px 16px;text-align:left}
+.ph b{font-weight:600}
+.ph .who{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.ph .chev{color:var(--muted);transition:transform .2s}
+.pr.open .chev{transform:rotate(90deg)}
+.pr.open .ph{background:var(--panel2)}
+.pb{padding:4px 16px 16px;background:var(--panel2);font-size:14px}
+.pb p{margin:8px 0;color:var(--muted)}
+.mini{width:100%;border-collapse:collapse;margin:6px 0 4px;font-size:14px}
+.mini th,.mini td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
+.mini th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.mini td:not(:first-child),.mini th:not(:first-child){text-align:right}
+.mini tr:last-child td{border-bottom:0}
+.note{font-size:13px;color:var(--muted);margin-top:12px}
+
+/* ronde scherm */
+.sheet{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;padding-top:env(safe-area-inset-top,0px)}
+.sheet .wrap{padding-block:0 calc(110px + env(safe-area-inset-bottom,0px))}
+.sbar{display:flex;align-items:center;justify-content:space-between;padding:16px 0 4px}
+.sbar h3{font-weight:800;font-size:19px;text-transform:uppercase;margin:0;letter-spacing:.04em}
+.bids{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bid{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:2px;min-width:0}
+.bid b{font-weight:600;font-size:15px}
+.bid span{font-size:12px;color:var(--muted)}
+.bid[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.bid[aria-pressed="true"] span{color:#f3a5a7}
+.levels{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.lv{min-width:52px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-weight:700}
+.lv[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.opt{display:flex;align-items:center;gap:10px;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;width:100%;text-align:left}
+.opt .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--muted);display:grid;place-items:center;font-size:14px;font-weight:800;flex:none}
+.opt[aria-pressed="true"] .box{background:var(--accent);border-color:var(--accent);color:#fff}
+.whos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.pick{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 14px;font-weight:600;font-size:16px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pick[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.pick:disabled{opacity:.45}
+.hint{font-size:14px;color:var(--muted);margin:-2px 0 10px}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:45;background:var(--bg);border-top:1px solid var(--line);padding:12px max(16px,env(safe-area-inset-left,0px)) calc(12px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-right,0px))}
+.dock .in{max-width:520px;margin:0 auto}
+.summary{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.summary .big{font-weight:800;font-size:23px;line-height:1.1;text-transform:uppercase}
+.summary .sm{color:var(--muted);font-size:14px;margin-top:4px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.res button{border-radius:14px;border:2px solid var(--line);background:var(--panel);padding:20px 10px;font-weight:800;font-size:16px;text-transform:uppercase;letter-spacing:.04em}
+.res .y[aria-pressed="true"]{background:var(--win-soft);border-color:var(--win);color:var(--win)}
+.res .n[aria-pressed="true"]{background:var(--lose-soft);border-color:var(--lose);color:var(--lose)}
+.tricks{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-top:10px}
+.tricks div:first-child{font-weight:600}
+.tricks small{display:block;color:var(--muted);font-weight:400;font-size:13px}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:46px;height:46px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:700;font-size:22px}
+.step output{min-width:40px;text-align:center;font-weight:800;font-size:24px}
+.misrow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 10px 10px 16px;margin-bottom:8px}
+.misrow .nm{font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.seg{display:flex;gap:6px}
+.seg button{border-radius:10px;border:2px solid var(--line);background:var(--bg);padding:10px 12px;font-weight:700;font-size:13px;text-transform:uppercase}
+.seg .y[aria-pressed="true"]{background:var(--win-soft);border-color:var(--win);color:var(--win)}
+.seg .n[aria-pressed="true"]{background:var(--lose-soft);border-color:var(--lose);color:var(--lose)}
+.menu{display:grid;gap:8px;margin-top:4px}
+.menu button{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;text-align:left;font-weight:600}
+.menu button.sure{background:var(--lose);color:var(--bg);border-color:var(--lose)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<style>
+.calcline{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px;color:var(--muted)}
+.calcline b{color:var(--ink)}
+.trumpnote{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px;color:var(--muted)}
+.trumpnote i{font-style:normal;font-size:20px;color:var(--accent)}
+.adj{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px}
+.adj span{font-weight:600;font-size:14px;color:var(--ink)}
+.resetpts{margin-top:10px}
+.thead{display:grid;gap:10px;padding:0 16px 8px;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+</style>
+<script>
+/* ---------- Klassiek wiezen (gedraaide troef) ---------- */
+const BIDS=[
+ {k:"vragen",n:"Vragen + meegaan",type:"duo",need:8,base:2,per:1,troef:"Gedraaide troef",
+  uitleg:"Je vraagt, een andere speler gaat mee. Samen moeten jullie minstens 8 slagen halen."},
+ {k:"alleen",n:"Alleen",type:"solo",need:5,base:3,per:1,troef:"Gedraaide troef",
+  uitleg:"Niemand ging mee met je vraag, of je kiest zelf om alleen te spelen. Je moet minstens 5 slagen halen."},
+ {k:"troel",n:"Troel",type:"duo",need:8,base:4,per:2,troef:"Kleur van de 4de aas",
+  uitleg:"Iemand heeft 3 azen. Zijn partner is wie de 4de aas heeft. Samen minstens 8 slagen halen."},
+ {k:"troela",n:"Troela",type:"duo",need:8,base:4,per:2,troef:"Gedraaide troef",
+  uitleg:"Iemand heeft 4 azen. Zijn partner is wie harten heer heeft. Samen minstens 8 slagen halen."},
+ {k:"ab9",n:"Abondance 9",type:"solo",need:9,base:5,per:0,troef:"Zelf kiezen",uitleg:"Alleen minstens 9 slagen halen. Je kiest zelf de troef."},
+ {k:"ab10",n:"Abondance 10",type:"solo",need:10,base:6,per:0,troef:"Zelf kiezen",uitleg:"Alleen minstens 10 slagen halen. Je kiest zelf de troef."},
+ {k:"ab11",n:"Abondance 11",type:"solo",need:11,base:8,per:0,troef:"Zelf kiezen",uitleg:"Alleen minstens 11 slagen halen. Je kiest zelf de troef."},
+ {k:"ab12",n:"Abondance 12",type:"solo",need:12,base:9,per:0,troef:"Zelf kiezen",uitleg:"Alleen minstens 12 slagen halen. Je kiest zelf de troef."},
+ {k:"mis",n:"Miserie",type:"mis",need:0,base:7,per:0,troef:"Geen troef",uitleg:"Je mag geen enkele slag halen. Meerdere spelers mogen tegelijk miserie spelen."},
+ {k:"omis",n:"Open miserie",type:"mis",need:0,base:14,per:0,troef:"Geen troef",uitleg:"Geen enkele slag halen, met je kaarten open op tafel."},
+ {k:"solo",n:"Solo",type:"solo",need:13,base:25,per:0,troef:"Zelf kiezen",uitleg:"Alle 13 slagen alleen halen. Je kiest zelf de troef."},
+ {k:"slim",n:"Solo slim",type:"solo",need:13,base:30,per:0,troef:"Gedraaide troef",uitleg:"Alle 13 slagen alleen halen, met de gedraaide troef."},
+];
+const B=k=>BIDS.find(b=>b.k===k);
+
+/* ---------- opslag ---------- */
+const KEY="wiezen-klassiek-v1";
+let S=load();
+let ui={tab:"scores",open:null,openPt:null,sure:null,menu:false,menuSure:false,round:null};
+function load(){let s=null;try{s=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+  if(!s||!Array.isArray(s.players))s={players:[],rounds:[],dealer:0,pts:{}};s.pts=s.pts||{};return s;}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const P=k=>({base:S.pts[k]?.base??B(k).base,per:S.pts[k]?.per??B(k).per});
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sg=n=>n>0?"+"+n:String(n);
+const cls=n=>n>0?"pos":n<0?"neg":"";
+function totals(){const t=[0,0,0,0];S.rounds.forEach(r=>r.d.forEach((v,i)=>t[i]+=v));return t;}
+
+/* ---------- punten ---------- */
+function value(r){ // waarde per eenheid, positief = gehaald
+  const b=B(r.k);const p=r.p;
+  if(b.type==="mis")return 0;
+  if(r.made){const extra=b.per&&r.tricks!=null?Math.max(0,r.tricks-b.need):0;return p.base+p.per*extra;}
+  const short=b.per&&r.tricks!=null?Math.max(1,b.need-r.tricks):1;
+  return -(p.base+p.per*(b.per?short:0));
+}
+function calc(r){
+  const b=B(r.k);const d=[0,0,0,0];
+  if(b.type==="mis"){r.sel.forEach(pl=>{const v=r.mis[pl]?r.p.base:-r.p.base;for(let i=0;i<4;i++)d[i]+=i===pl?3*v:-v;});return d;}
+  const v=value(r);
+  for(let i=0;i<4;i++)d[i]=b.type==="duo"?(r.sel.includes(i)?v:-v):(r.sel.includes(i)?3*v:-v);
+  return d;
+}
+function explain(r){
+  const b=B(r.k);const p=r.p;
+  if(b.type==="mis")return `Per speler: gehaald <b>+${3*p.base}</b> (elke tegenspeler −${p.base}), niet gehaald <b>−${3*p.base}</b> (elke tegenspeler +${p.base}).`;
+  const v=value(r);let s;
+  if(b.per){
+    if(r.made){const ex=r.tricks-b.need;s=`${p.base} basis${ex>0?` + ${ex} extra slag${ex>1?"en":""} × ${p.per}`:""} = <b>${v}</b>`;}
+    else{const sh=b.need-r.tricks;s=`${p.base} basis + ${sh} slag${sh>1?"en":""} tekort × ${p.per} = <b>${v}</b>`;}
+  }else s=`${r.made?"":"−"}${p.base} = <b>${v}</b>`;
+  return b.type==="duo"?`${s} per partner. De tegenspelers krijgen het omgekeerde.`:`${s} per tegenspeler. De speler krijgt 3× dat: <b>${sg(3*v)}</b>.`;
+}
+function status(r){const b=B(r.k);if(b.type==="mis"){const a=r.sel.map(p=>r.mis[p]);return a.every(x=>x)?"ok":a.every(x=>x===false)?"ko":"mix";}return r.made?"ok":"ko";}
+
+/* ---------- views ---------- */
+function render(){
+  const a=document.getElementById("app");
+  if(S.players.length!==4){a.innerHTML=setupView();bindSetup();return;}
+  a.innerHTML=`<div class="wrap">${topBar()}${ui.tab==="scores"?scoresView():ui.tab==="rondes"?roundsView():ptsView()}</div>${tabs()}${ui.round?roundView():""}`;
+  document.body.style.overflow=ui.round?"hidden":"";
+}
+function topBar(){return `<header class="top"><div class="brand"><i>♠</i>Wiezen</div><button class="ghost" data-act="menu">${ui.menu?"Sluiten":"Menu"}</button></header>`+
+ (ui.menu?`<div class="menu"><button data-act="ng-same">Nieuw spel, zelfde spelers</button><button data-act="ng-new" class="${ui.menuSure?"sure":""}">${ui.menuSure?"Tik nog eens: alles wissen":"Nieuw spel, nieuwe spelers"}</button></div>`:"");}
+function tabs(){const t=[["scores","Scores"],["rondes","Rondes"],["punten","Punten"]];
+ return `<nav class="tabs"><div class="in">${t.map(([k,n])=>`<button data-tab="${k}" ${ui.tab===k?'aria-current="page"':""}>${n}</button>`).join("")}</div></nav>`;}
+
+function setupView(){
+  return `<div class="wrap setup"><header class="top"><div class="brand"><i>♠</i>Wiezen</div></header>
+  <h1>Wie speelt er mee?</h1><p>Geef de 4 spelers in, in de volgorde rond de tafel. Speler 1 deelt eerst.</p>
+  ${[0,1,2,3].map(i=>`<label class="field"><span>${i+1}</span><input id="pl${i}" autocomplete="off" maxlength="16" placeholder="Speler ${i+1}"></label>`).join("")}
+  <button class="primary" id="startbtn" style="margin-top:14px" disabled>Start spel</button></div>`;
+}
+function bindSetup(){
+  const ins=[0,1,2,3].map(i=>document.getElementById("pl"+i));const b=document.getElementById("startbtn");
+  const chk=()=>b.disabled=!ins.every(x=>x.value.trim());
+  ins.forEach((x,i)=>{x.addEventListener("input",chk);x.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();(ins[i+1]||b).focus();}});});
+  b.onclick=()=>{S={players:ins.map(x=>x.value.trim()),rounds:[],dealer:0,pts:S.pts||{}};save();ui.tab="scores";render();};
+}
+
+function scoresView(){
+  const t=totals();const order=[0,1,2,3].sort((a,b)=>t[b]-t[a]);const max=Math.max(...t);
+  const last=S.rounds[S.rounds.length-1];
+  return `<h2>Stand na ${S.rounds.length} ${S.rounds.length===1?"ronde":"rondes"}</h2><div class="board">${order.map((i,r)=>`
+   <div class="prow ${t[i]===max&&S.rounds.length?"lead":""}"><span class="rank num">${r+1}</span>
+   <span class="pname">${esc(S.players[i])}${S.dealer===i?"<small>Deler</small>":""}</span>
+   <span class="ptot num ${cls(t[i])}">${sg(t[i])}</span></div>`).join("")}</div>
+   <div class="row2"><span>Deler: <b style="color:var(--ink)">${esc(S.players[S.dealer])}</b></span><button class="link" data-act="dealer">Volgende deler</button></div>
+   <div class="trumpnote"><i>♥</i><span><b style="color:var(--ink)">${esc(S.players[S.dealer])}</b> deelt per 4-4-5 en draait zijn laatste kaart om: dat is de troef.</span></div>
+   <div class="cta" style="grid-template-columns:1fr"><button class="primary" data-act="newround">Nieuwe ronde</button></div>
+   ${last?`<div class="last">Vorige: <b>${esc(B(last.k).n)}</b> · ${last.sel.map(i=>esc(S.players[i])).join(" & ")}</div>`:""}
+   <p class="note">Iedereen gepast? Dan wordt er gewoon opnieuw gedeeld, zonder punten.</p>`;
+}
+
+function roundsView(){
+  if(!S.rounds.length)return `<h2>Rondes</h2><div class="empty">Nog geen rondes gespeeld.<br>Start er een via <b>Scores → Nieuwe ronde</b>.</div>`;
+  return `<h2>Rondes · tik voor details</h2><div class="rlist">${S.rounds.map((r,i)=>({r,i})).reverse().map(({r,i})=>{
+   const open=ui.open===i;const m=status(r);const b=B(r.k);
+   const sub=b.type==="mis"?r.sel.map(p=>`${esc(S.players[p])} ${r.mis[p]?"✓":"✗"}`).join(" · "):`${r.sel.map(x=>esc(S.players[x])).join(" & ")}${b.per?` · ${r.tricks} slagen`:""}`;
+   return `<div class="ritem"><button class="rhead" data-open="${i}" aria-expanded="${open}"><span class="rno num">#${i+1}</span>
+   <span><div class="rbid">${esc(b.n)}</div><div class="rsub">${sub}</div></span>
+   <span class="tag ${m}">${m==="ok"?"Gehaald":m==="ko"?"Niet":"Gemengd"}</span></button>
+   ${open?`<div class="rbody"><div class="dgrid">${r.d.map((v,j)=>`<div class="dcell"><span>${esc(S.players[j])}</span><b class="num ${cls(v)}">${sg(v)}</b></div>`).join("")}</div>
+   <div class="calcline">${explain(r)}</div>
+   <button class="del ${ui.sure===i?"sure":""}" data-del="${i}">${ui.sure===i?"Tik nog eens om te verwijderen":"Ronde verwijderen"}</button></div>`:""}</div>`;}).join("")}</div>`;
+}
+
+function ptsView(){
+  return `<h2>Overzicht per bod</h2><div class="ptable" style="margin-bottom:6px">${BIDS.map(b=>`<div style="display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px 16px;border-bottom:1px solid var(--line)"><b style="font-weight:600">${b.n}</b><span class="num" style="color:var(--muted);font-size:13px;text-align:right">${b.type==="mis"?"0 slagen":b.need+" slagen"}</span><span style="color:var(--muted);font-size:13px">Troef: ${b.troef.toLowerCase()}</span><span style="color:var(--muted);font-size:13px;text-align:right">${b.type==="duo"?"met partner":"alleen"}</span></div>`).join("")}</div>
+  <h2>Puntentabel · tik op een bod</h2>
+  <div class="thead" style="grid-template-columns:1fr auto 52px 18px"><span>Bod</span><span>Nodig</span><span style="text-align:right">Punten</span><span></span></div>
+  <div class="ptable">${BIDS.map(b=>{const open=ui.openPt===b.k;const p=P(b.k);
+   const needTxt=b.type==="mis"?"0 slagen":b.type==="duo"?`${b.need} samen`:`${b.need} alleen`;
+   let body="";
+   if(open){
+     const who=b.type==="duo"?"Met partner: elke partner krijgt de punten, elke tegenspeler verliest ze.":"Alleen: elke tegenspeler betaalt de punten, dus de speler krijgt 3×.";
+     const ex=b.type==="duo"
+       ?`<table class="mini"><tr><th>Resultaat</th><th>Partners</th><th>Tegenspelers</th></tr><tr><td>Net gehaald (${b.need})</td><td>+${p.base} elk</td><td>−${p.base} elk</td></tr>${b.per?`<tr><td>${b.need+2} slagen</td><td>+${p.base+2*p.per} elk</td><td>−${p.base+2*p.per} elk</td></tr><tr><td>${b.need-1} slagen</td><td>−${p.base+p.per} elk</td><td>+${p.base+p.per} elk</td></tr>`:`<tr><td>Niet gehaald</td><td>−${p.base} elk</td><td>+${p.base} elk</td></tr>`}</table>`
+       :`<table class="mini"><tr><th>Resultaat</th><th>Speler</th><th>Elke tegenspeler</th></tr><tr><td>${b.type==="mis"?"Gehaald":`Net gehaald (${b.need})`}</td><td>+${3*p.base}</td><td>−${p.base}</td></tr>${b.per?`<tr><td>${b.need+2} slagen</td><td>+${3*(p.base+2*p.per)}</td><td>−${p.base+2*p.per}</td></tr><tr><td>${b.need-1} slagen</td><td>−${3*(p.base+p.per)}</td><td>+${p.base+p.per}</td></tr>`:`<tr><td>Niet gehaald</td><td>−${3*p.base}</td><td>+${p.base}</td></tr>`}</table>`;
+     body=`<p>${b.uitleg}</p><p><b style="color:var(--ink)">Troef:</b> ${b.troef}</p><p>${who}${b.per?` Per extra slag: +${p.per}. Per slag tekort: −${p.per} extra.`:""}</p>${ex}
+      <div class="adj"><span>Basispunten</span><div class="step"><button data-pt="${b.k}" data-f="base" data-v="-1" aria-label="Minder">−</button><output class="num">${p.base}</output><button data-pt="${b.k}" data-f="base" data-v="1" aria-label="Meer">+</button></div></div>
+      ${b.per?`<div class="adj"><span>Per extra slag</span><div class="step"><button data-pt="${b.k}" data-f="per" data-v="-1" aria-label="Minder">−</button><output class="num">${p.per}</output><button data-pt="${b.k}" data-f="per" data-v="1" aria-label="Meer">+</button></div></div>`:""}`;
+   }
+   return `<div class="pr ${open?"open":""}"><button class="ph" data-optp="${b.k}" aria-expanded="${open}" style="grid-template-columns:1fr auto 52px 18px"><b>${b.n}</b><span class="who" style="text-transform:none;letter-spacing:0;font-size:13px">${needTxt}</span><span class="num" style="font-weight:800;font-size:20px;text-align:right">${p.base}</span><span class="chev">›</span></button>${open?`<div class="pb">${body}</div>`:""}</div>`;}).join("")}</div>
+  <p class="note">Punten verschillen per tafel. Pas ze hier aan naar jullie afspraken; dat geldt voor nieuwe rondes. Na elke ronde is de som van alle punten 0.</p>
+  <button class="ghost resetpts" data-act="resetpts">Standaardpunten terugzetten</button>`;
+}
+
+function roundView(){
+  const R=ui.round;const b=R.k?B(R.k):null;
+  let h=`<div class="sheet" role="dialog" aria-label="Nieuwe ronde"><div class="wrap"><div class="sbar"><h3>${R.step===1?"Nieuwe ronde":"Resultaat"}</h3><button class="ghost" data-act="close">Annuleer</button></div>`;
+  if(R.step===1){
+    const max=b?(b.type==="duo"?2:b.type==="mis"?3:1):0;
+    const ok=b&&(b.type==="mis"?R.sel.length>=1:R.sel.length===max);
+    h+=`<h2>1 · Welk bod won?</h2><div class="bids">${BIDS.map(x=>{const p=P(x.k);return `<button class="bid" data-bid="${x.k}" aria-pressed="${R.k===x.k}"><b>${x.n}</b><span>${x.type==="mis"?"0 slagen":x.need+" slagen"} · ${x.type==="duo"?"met partner":"alleen"}</span><span>Troef: ${x.troef.toLowerCase()} · ${p.base} ptn</span></button>`;}).join("")}</div>
+    ${b?`<div class="calcline"><b>${b.n}:</b> ${b.uitleg} <br><b>Troef:</b> ${b.troef}</div>`:""}
+    <h2>2 · ${!b?"Spelers":b.type==="duo"?"Welke 2 spelen samen?":b.type==="mis"?"Wie speelt "+b.n.toLowerCase()+"? (1 tot 3)":"Wie speelt?"}</h2>
+    ${b?"":`<p class="hint">Kies eerst een bod.</p>`}
+    <div class="whos">${S.players.map((p,i)=>`<button class="pick" data-pick="${i}" aria-pressed="${R.sel.includes(i)}" ${b?"":"disabled"}>${esc(p)}</button>`).join("")}</div></div>
+    <div class="dock"><div class="in"><button class="primary" data-act="play" ${ok?"":"disabled"}>Speel</button></div></div></div>`;
+  }else{
+    h+=`<div class="summary"><div class="big">${esc(b.n)}</div><div class="sm">${R.sel.map(i=>esc(S.players[i])).join(" & ")}${b.type!=="mis"?` · nodig: ${b.need} slagen`:""}</div></div>`;
+    let ready;
+    if(b.type==="mis"){
+      h+=`<h2>Wie heeft het gehaald?</h2>${R.sel.map(p=>`<div class="misrow"><span class="nm">${esc(S.players[p])}</span><div class="seg"><button class="y" data-mis="${p}" data-v="1" aria-pressed="${R.mis[p]===true}">Gehaald</button><button class="n" data-mis="${p}" data-v="0" aria-pressed="${R.mis[p]===false}">Niet</button></div></div>`).join("")}`;
+      ready=R.sel.every(p=>R.mis[p]===true||R.mis[p]===false);
+    }else{
+      h+=`<h2>${R.sel.length===2?"Hebben ze":"Heeft "+esc(S.players[R.sel[0]])} het gehaald?</h2>
+      <div class="res"><button class="y" data-res="1" aria-pressed="${R.made===true}">Gehaald</button><button class="n" data-res="0" aria-pressed="${R.made===false}">Niet gehaald</button></div>
+      ${b.per&&R.made!==null?`<div class="tricks"><div>Aantal slagen<small>${R.made?"meer slagen = meer punten":"minder slagen = meer verlies"}</small></div><div class="step"><button data-tr="-1" aria-label="Minder">−</button><output class="num">${R.tricks}</output><button data-tr="1" aria-label="Meer">+</button></div></div>`:""}`;
+      ready=R.made!==null;
+    }
+    if(ready){const r={...R,p:P(R.k)};const d=calc(r);h+=`<h2>Puntenverdeling</h2><div class="dgrid">${d.map((v,j)=>`<div class="dcell"><span>${esc(S.players[j])}</span><b class="num ${cls(v)}">${sg(v)}</b></div>`).join("")}</div><div class="calcline">${explain(r)}</div>`;}
+    h+=`</div><div class="dock"><div class="in"><button class="primary" data-act="saveround" ${ready?"":"disabled"}>Opslaan</button></div></div></div>`;
+  }
+  return h;
+}
+
+/* ---------- acties ---------- */
+document.addEventListener("click",e=>{
+  const t=e.target.closest("button");if(!t||t.disabled)return;const A=t.dataset;const R=ui.round;
+  if(A.tab){ui.tab=A.tab;ui.open=null;ui.sure=null;ui.menu=false;render();window.scrollTo(0,0);return;}
+  if(A.act==="menu"){ui.menu=!ui.menu;ui.menuSure=false;render();return;}
+  if(A.act==="ng-same"){S.rounds=[];S.dealer=0;save();ui.menu=false;ui.tab="scores";render();return;}
+  if(A.act==="ng-new"){if(!ui.menuSure){ui.menuSure=true;render();return;}S={players:[],rounds:[],dealer:0,pts:S.pts};save();ui.menu=false;ui.menuSure=false;render();return;}
+  if(A.act==="dealer"){S.dealer=(S.dealer+1)%4;save();render();return;}
+  if(A.act==="newround"){ui.round={step:1,k:null,sel:[],made:null,tricks:null,mis:{}};render();return;}
+  if(A.act==="close"){ui.round=null;render();return;}
+  if(A.bid){const nb=B(A.bid);const old=R.k?B(R.k):null;if(!old||old.type!==nb.type)R.sel=[];R.k=A.bid;
+    const max=nb.type==="duo"?2:nb.type==="mis"?3:1;if(R.sel.length>max)R.sel=R.sel.slice(-max);render();return;}
+  if(A.pick!==undefined){const i=+A.pick;const ty=B(R.k).type;const max=ty==="duo"?2:ty==="mis"?3:1;
+    if(R.sel.includes(i))R.sel=R.sel.filter(x=>x!==i);else{R.sel.push(i);if(R.sel.length>max)R.sel.shift();}render();return;}
+  if(A.act==="play"){R.step=2;R.made=null;R.tricks=null;R.mis={};R.sel.sort();render();document.querySelector(".sheet").scrollTop=0;return;}
+  if(A.res!==undefined){const b=B(R.k);R.made=A.res==="1";R.tricks=R.made?b.need:b.need-1;render();return;}
+  if(A.tr){const b=B(R.k);const lo=R.made?b.need:0,hi=R.made?13:b.need-1;R.tricks=Math.max(lo,Math.min(hi,R.tricks+ +A.tr));render();return;}
+  if(A.mis!==undefined){R.mis[+A.mis]=A.v==="1";render();return;}
+  if(A.act==="saveround"){const r={k:R.k,sel:R.sel.slice(),made:R.made,tricks:R.tricks,mis:{...R.mis},p:P(R.k)};r.d=calc(r);
+    S.rounds.push(r);S.dealer=(S.dealer+1)%4;save();ui.round=null;ui.tab="scores";render();window.scrollTo(0,0);return;}
+  if(A.open!==undefined){const i=+A.open;ui.open=ui.open===i?null:i;ui.sure=null;render();return;}
+  if(A.del!==undefined){const i=+A.del;if(ui.sure!==i){ui.sure=i;render();return;}S.rounds.splice(i,1);ui.open=null;ui.sure=null;save();render();return;}
+  if(A.optp){ui.openPt=ui.openPt===A.optp?null:A.optp;render();return;}
+  if(A.pt){const k=A.pt,f=A.f;const cur=P(k);cur[f]=Math.max(0,cur[f]+ +A.v);
+    const def=B(k);if(cur.base===def.base&&cur.per===def.per)delete S.pts[k];else S.pts[k]=cur;save();render();return;}
+  if(A.act==="resetpts"){S.pts={};save();render();return;}
+});
+render();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));}
+</script>
+</body>
+</html>
